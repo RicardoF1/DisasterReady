@@ -21,6 +21,7 @@ namespace DisasterReady
 
         CharacterController controller;
         float pitch, vertical, crouchAmount = 1f;
+        Light torch;
         readonly Collider[] overhead = new Collider[16];
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -30,7 +31,7 @@ namespace DisasterReady
         {
             if (!house) return;
             // Se conserva la cámara original en la escena, desactivada durante la partida.
-            foreach (Camera camera in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None))
+            foreach (Camera camera in Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude))
                 camera.gameObject.SetActive(false);
             var obj = new GameObject("Jugador");
             obj.transform.SetParent(root);
@@ -56,6 +57,15 @@ namespace DisasterReady
             View.fieldOfView = 72;
             cameraObject.tag = "MainCamera";
             cameraObject.AddComponent<AudioListener>();
+
+            var lamp = new GameObject("Linterna");
+            lamp.transform.SetParent(cameraObject.transform, false);
+            torch = lamp.AddComponent<Light>();
+            torch.type = LightType.Spot;
+            torch.range = 18;
+            torch.spotAngle = 65;
+            torch.intensity = 5;
+            torch.enabled = false;
 
             GameManager.Instance.Player = this;
             GameManager.Instance.SetPause(false);
@@ -116,6 +126,12 @@ namespace DisasterReady
             View.transform.localRotation = Quaternion.Euler(pitch + Mathf.Sin(Time.time * 29) * shake,
                 Mathf.Sin(Time.time * 37) * shake, Mathf.Sin(Time.time * 23) * shake);
             View.transform.localPosition = Vector3.up * Mathf.Lerp(CrouchEyeHeight, StandEyeHeight, crouchAmount);
+
+            if (keys != null && keys.fKey.wasPressedThisFrame)
+            {
+                if (Backpack != null && Backpack.Contains("flashlight")) torch.enabled = !torch.enabled;
+                else GameEvents.Message("Primero recoge la linterna.");
+            }
 
             if (Position.y < -5) game.Damage(100, "Caíste fuera de una ruta transitable.");
         }

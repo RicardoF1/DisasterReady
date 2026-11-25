@@ -16,7 +16,6 @@ namespace DisasterReady
         Vector3 shakeForce;
         float shakeTimer;
         float quakeTime;
-        bool quakeRunning;
         ParticleSystem dustFloor1, dustFloor2, haze;
         Material plaster;
 
@@ -66,7 +65,6 @@ namespace DisasterReady
 
         IEnumerator MainQuake()
         {
-            quakeRunning = true;
             quakeTime = 0f;
             ScheduleFallables(GameConfig.QuakeSeconds * 0.7f);
             StartCoroutine(PowerCut());
@@ -80,7 +78,6 @@ namespace DisasterReady
                 ReleaseDue();
                 yield return null;
             }
-            quakeRunning = false;
         }
 
         IEnumerator Aftershock()
@@ -88,7 +85,6 @@ namespace DisasterReady
             // La réplica suelta lo que aún quedaba en pie y algunos trozos del techo
             ScheduleFallables(GameConfig.AftershockSeconds * 0.8f);
             quakeTime = 0f;
-            quakeRunning = true;
             StartCoroutine(CeilingDebris(GameConfig.AftershockSeconds - 1f, 0.5f));
             while (quakeTime < GameConfig.AftershockSeconds)
             {
@@ -96,7 +92,6 @@ namespace DisasterReady
                 ReleaseDue();
                 yield return null;
             }
-            quakeRunning = false;
         }
 
         // ---------- Objetos que caen ----------

@@ -54,9 +54,20 @@ namespace DisasterReady
             get
             {
                 if (lit == null) lit = Shader.Find("Universal Render Pipeline/Lit");
+                if (lit == null) lit = FromVariantMaterial("M_Lit_Emision");   // respaldo para builds (Web)
                 if (lit == null) lit = Shader.Find("Standard");
                 return lit;
             }
+        }
+
+        /// <summary>
+        /// Los materiales de Art/Resources/ShaderVariants obligan a Unity a incluir en el build
+        /// las variantes de shader que este juego usa (emisión, transparencia, partículas).
+        /// </summary>
+        static Shader FromVariantMaterial(string name)
+        {
+            var m = Resources.Load<Material>("ShaderVariants/" + name);
+            return m != null ? m.shader : null;
         }
 
         // ---------------------------------------------------------------------
@@ -151,6 +162,7 @@ namespace DisasterReady
             string key = $"p{color}";
             if (cache.TryGetValue(key, out var m)) return m;
             if (unlit == null) unlit = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (unlit == null) unlit = FromVariantMaterial("M_Particulas");
             if (unlit == null) unlit = Shader.Find("Sprites/Default");
             m = new Material(unlit);
             m.SetTexture(BaseMap, GetTexture("soft_dot"));

@@ -18,42 +18,25 @@ namespace DisasterReady
         {
             if (house) root.GetComponentInChildren<FirstPersonPlayer>().gameObject.AddComponent<PlayerInteraction>();
         });
-
         void Awake()
-        {
-            player = GetComponent<FirstPersonPlayer>();
-            player.Backpack = this;
-        }
-
+        { player = GetComponent<FirstPersonPlayer>(); player.Backpack = this; }
         public bool TryAdd(ItemData item)
         {
             var game = GameManager.Instance;
-            if (game == null || game.State != GameState.Preparation || game.Paused) return false;
+            if (game.State != GameState.Preparation || game.Paused) return false;
             if (Contains(item.Id)) return false;
             if (Used + item.Size > Capacity)
-            {
-                GameEvents.Message("No cabe: prioriza los suministros útiles.");
-                return false;
-            }
-            items.Add(item);
-            Used += item.Size;
+            { GameEvents.Message("No cabe: prioriza los suministros útiles."); return false; }
+            items.Add(item); Used += item.Size;
             game.Award(item.Points, item.Points > 0 ? "Suministro útil: " + item.Name : "Objeto prescindible: " + item.Name);
-            GameEvents.Item(item);
-            GameEvents.Sound("pickup");
-            return true;
+            GameEvents.Item(item); GameEvents.Sound("pickup"); return true;
         }
-
         void Update()
         {
-            var game = GameManager.Instance;
-            if (game == null) return;
-            game.InteractionHint = "";
+            var game = GameManager.Instance; game.InteractionHint = "";
             if (!game.Playing || game.Paused) return;
-
             var ray = new Ray(player.View.transform.position, player.View.transform.forward);
             if (!Physics.Raycast(ray, out RaycastHit hit, 2.5f, ~0, QueryTriggerInteraction.Ignore)) return;
-            if (hit.collider.transform.IsChildOf(transform)) return;
-
             // Busca una interfaz, nunca una clase del módulo Level.
             foreach (MonoBehaviour behaviour in hit.collider.GetComponentsInParent<MonoBehaviour>())
             {

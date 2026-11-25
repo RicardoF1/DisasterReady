@@ -1,81 +1,59 @@
 # Disaster Ready
 
-Prototipo educativo 3D para Windows, ambientado en una vivienda ficticia de dos pisos en Huancayo.
-Unity 6000.6.3f1, URP 17.6, Input System 1.20 y uGUI 2.6.
+Simulación educativa 3D en primera persona sobre cómo actuar ante un sismo, en una vivienda
+familiar de dos pisos en Huancayo. ODS 11 (meta 11.5) y ODS 13 (meta 13.1).
 
-## Arranque
+- Motor: **Unity 6000.6.3f1** (URP), Input System, uGUI. Todos deben usar esta versión.
+- Escenas: `MainMenu` y `House` (ya están en Build Settings).
+- Todo el contenido (casa, muebles, interfaz, efectos) se construye por código al dar Play,
+  así las escenas casi no cambian y no hay conflictos de Git en los `.unity`.
 
-1. Abrir este proyecto desde Unity Hub con la versión indicada.
-2. Esperar a que se importen los scripts y comprobar Console.
-3. Abrir Assets/_Project/Scenes/MainMenu.unity y pulsar Play.
-4. Pulsar Jugar. No agregar componentes manualmente a las escenas.
+## Cómo abrir
 
-Las escenas MainMenu y House deben permanecer habilitadas en Build Profiles.
-El proyecto usa exclusivamente el nuevo Input System. No requiere TMP ni archivos de audio.
-Los objetos se generan durante Play; no guardar esos objetos como cambios de escena.
+1. Instalar Unity 6000.6.3f1 desde Unity Hub.
+2. Unity Hub › Add › Add project from disk › carpeta `DisasterReady`.
+3. Esperar a que importe (la primera vez tarda unos minutos).
+4. Abrir `Assets/_Project/Scenes/MainMenu.unity` y pulsar **Play**.
 
-## Controles
+## Cómo se juega
 
-WASD: caminar. Ratón: mirar. Shift: correr. Ctrl: agacharse.
-H: sujetarse estando quieto y agachado en una zona marcada.
-E: interactuar. F: encender la linterna recogida. Esc: pausa.
-No hay salto: las escaleras se recorren caminando.
+| Fase | Qué hacer |
+|---|---|
+| 1 · Preparación (90 s) | Recorre los dos pisos y arma la **mochila de emergencia** (12 espacios). Los útiles no caben todos: hay que priorizar. Laptop, consola y trofeo restan puntos. |
+| Alerta sísmica (6 s) | Suena la alarma: corre a una zona segura. |
+| 2 · Sismo (25 s) | **Agáchate** (C) bajo una mesa firme o junto a una columna con señal ZONA SEGURA, **cúbrete** y **sujétate** (mantén H). Lejos de ventanas, estantes y roperos. |
+| 3 · Evacuación (90 s) | Cierra el **balón de gas** (cocina), baja la **llave de luz** (hall), sigue las señales de SALIDA y llega al **punto de reunión**. Hay una ruta bloqueada por escombros y una **réplica**. |
+| Resultado | Nota **A / B / C**, resumen de decisiones y consejos. |
 
-## Arquitectura
+**Controles:** WASD mover · Mouse mirar · Shift correr · C / Ctrl agacharse · H sujetarse ·
+E recoger / usar · Q sacar el último objeto de la mochila · F linterna · Esc pausa.
 
-Todos los contratos viven en Core, namespace DisasterReady.
-Cada módulo registra su instalación en BeforeSceneLoad.
-Core ejecuta los instaladores por orden y construye una sola raíz por escena.
-SubsystemRegistration limpia las referencias estáticas y los eventos.
-Level: prioridad 10 y 20. Player: 30 y 40. UI: 50. Audio: 60.
-UI y Audio no conocen clases concretas de Player o Level.
+## Estructura del código (namespace `DisasterReady`)
 
-## Configuración opcional
+| Carpeta | Responsable | Contenido |
+|---|---|---|
+| `Scripts/Core` | Keen | Fases, tiempo, puntaje, salud, mochila, zonas, eventos, ajustes |
+| `Scripts/Player` | Ricardo | Movimiento, agacharse/sujetarse, interacción (E/Q), linterna |
+| `Scripts/Level` | Joshua | Casa de 2 pisos, mobiliario, objetos, zonas, exterior y efectos del sismo |
+| `Scripts/UI` | Abraham | Menú, HUD, pausa, resultados, post-procesado |
+| `Scripts/Audio` + `Audio/Resources` | Abraham | Música, ambientes y efectos |
 
-Create > Disaster Ready > Configuración permite crear un GameConfig.
-Para cargarlo automáticamente guardarlo como:
-Assets/_Project/Scripts/Core/Resources/DisasterConfig.asset
-Sin ese archivo se utilizan valores de respaldo en memoria, sin modificar assets.
+Reglas: Player, Level, UI y Audio **solo dependen de Core** y se comunican con `GameEvents`.
+Cada sistema se instala solo con `SceneBoot.Register(escena, crear)`.
 
-## Audio opcional
+## Cambiar valores o contenido
 
-Colocar clips bajo Assets/_Project/Audio/Resources con estos nombres base:
-ambient, alarm, quake, calm, pickup, impact, glass, switch.
-Se admiten WAV/OGG importados por Unity; no incluir extensión en Resources.Load.
-Sin clips, AudioClip.Create genera sonidos de respaldo.
-Registrar autor, URL, licencia y modificaciones de cada audio externo.
+- Duraciones, puntajes y notas: `Scripts/Core/GameConfig.cs`.
+- Suministros (nombre, espacios, puntos, consejo): `Scripts/Core/ItemCatalog.cs`.
+- Plano de la casa, puertas, ventanas y ruta: `Scripts/Level/HouseLayout.cs`.
+- Muebles y ubicación de los objetos: `Scripts/Level/Furnishing.cs`.
+- Sonidos: reemplazar el `.wav` en `Assets/_Project/Audio/Resources/Audio/` con el **mismo nombre**.
+- Modelos 3D: cambiar `Scripts/Level/ItemModels.cs` o los métodos de `Furnishing.cs` por modelos de Blender.
 
-## Reparto de commits
+## Notas
 
-Keen 1: Contracts.cs y GameConfig.cs.
-Keen 2: SceneBootstrap.cs, GameManager.cs y README.md.
-Ricardo 1: FirstPersonPlayer.cs.
-Ricardo 2: PlayerInteraction.cs.
-Joshua 1: HouseBuilder.cs.
-Joshua 2: LevelContent.cs, LevelInteractable.cs y FallingHazard.cs.
-Abraham 1: GameUI.cs.
-Abraham 2: AudioManager.cs y QA.md dentro de Scripts/UI.
-Cada integrante incluye los archivos .meta de sus assets.
-
-## Diseño educativo
-
-Mochila: 12 espacios. Los nueve suministros útiles ocupan 12 en total.
-Preparación: 90 s; alarma: 5 s; sismo: 24 s; evacuación: 100 s.
-Réplica: comienza 8 s después del inicio de evacuación y dura 6 s.
-La preparación y la alarma son partes de un simulacro, no predicción sísmica.
-Las zonas estructurales son ficticias y se consideran previamente evaluadas.
-Cerrar gas y electricidad solo se permite después del movimiento.
-En una emergencia real, no operar interruptores si existe olor a gas.
-No retrasar la salida ni exponerse para obtener una bonificación.
-
-ODS 11.5: preparación para reducir consecuencias de desastres.
-ODS 13.1: contribución educativa a la resiliencia.
-Los sismos son geológicos; no los causa el cambio climático.
-Referencias: https://www.gob.pe/1053-que-hacer-en-caso-de-sismo
-https://www.gob.pe/institucion/indeci/noticias/576089-indeci-recomienda-medidas-de-preparacion-ante-sismos
-
-## Validación
-
-Consultar Assets/_Project/Scripts/UI/QA.md.
-La revisión de generación no ejecutó Unity: compilar, probar Play y generar
-un build Windows en el editor antes de considerar aprobada la entrega.
+- Los `.wav` usan Git LFS (`.gitattributes`). Instalar Git LFS una vez: `git lfs install`.
+- Si se hace un build de Windows y el vidrio se ve opaco, agregar en
+  *Project Settings › Graphics › Always Included Shaders* el shader `Universal Render Pipeline/Lit`.
+- Los sonidos y la música se generaron con `Tools/generar_audio.py` (Python + numpy + scipy):
+  `python Tools/generar_audio.py Assets/_Project/Audio/Resources/Audio`. Se pueden reemplazar por clips de Freesound o Pixabay editados en Audacity.
